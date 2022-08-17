@@ -1,8 +1,8 @@
 def genaralvars () {
-    env.GIT_REPO = 'https://gitlab.com/chaloglez/labsacademia.git'
+    env.GIT_REPO = 'https://github.com/TheIronhidex/ansible01.git'
     env.GIT_BRANCH = 'main'
-    env.DOCKER_REPO = 'gonzafirma'
-    CONTAINER_PORT= '80'
+    env.DOCKER_REPO = 'theironhidex'
+    CONTAINER_PORT= '87'
 }
 
 pipeline {
