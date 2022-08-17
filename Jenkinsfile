@@ -1,67 +1,50 @@
 def genaralvars () {
-    env.GIT_REPO = 'https://github.com/TheIronhidex/ansible01.git'
+
+    env.GIT_REPO = 'https://github.com/TheIronhidex/ansible01/tree/main'
     env.GIT_BRANCH = 'main'
     env.DOCKER_REPO = 'theironhidex'
     CONTAINER_PORT= '87'
+
 }
 
 pipeline {
     agent any
-    tools {
-       terraform 'terraform-2'
-    }
+    //tool name: 'ansible210', type: 'org.jenkinsci.plugins.ansible.AnsibleInstallation'
     stages {
         stage ("Set Variables") {
             steps {                
                 genaralvars()
             }
         }
-        //stage ("Get Code") {
-        //    steps {
-        //        git branch: "${env.GIT_BRANCH}", url: "${env.GIT_REPO}"
-        //    }
-        //}
-        stage ("Verify If exist container") {
+        stage ("Get Code") {
             steps {
-                    script {
-                        DOCKERID = sh (script: "docker ps -f publish=${CONTAINER_PORT} -q", returnStdout: true).trim()
-                        if  ( DOCKERID !="" ) {
-                            if (fileExists('terraform.tfstate')) {
-                                sh "terraform destroy  --target docker_container.nginx -var=\"container_port=${CONTAINER_PORT}\" -var=\"reponame=${env.DOCKER_REPO}\" --auto-approve"
-                            }
-                            else {
-                                sh "docker stop ${DOCKERID}"
-                            }
-                        }
-                }
+                git branch: "${env.GIT_BRANCH}", url: "${env.GIT_REPO}"
             }
         }
-        stage('terraform format check') {
-            steps{
-                sh 'terraform fmt'
+        stage ("Ansible Hello World") {
+            steps {
+                ansiblePlaybook become: true, colorized: true, extras: '-v', disableHostKeyChecking: true, credentialsId: 'gonzafirma-ssh-server01', installation: 'ansible210', inventory: 'inventory.hosts', playbook: 'playbook-hello-world.yml'
             }
         }
-        stage('terraform Init') {
-            steps{
-                sh 'terraform init'
+        stage ("Ansible Connect to HOST and Install Package") {
+            steps {
+                ansiblePlaybook become: true, colorized: true, extras: '-v', disableHostKeyChecking: true, credentialsId: 'gonzafirma-ssh-server01', installation: 'ansible210', inventory: 'inventory.hosts', playbook: 'playbook-install-package-ubuntu.yml'
             }
         }
-        stage('terraform apply') {
-            steps{
-                sh "terraform apply -var=\"container_port=${CONTAINER_PORT}\" -var=\"reponame=${env.DOCKER_REPO}\" --auto-approve"
+        stage ("Ansible Connect to HOST and execute a command") {
+            steps {
+                ansiblePlaybook become: true, colorized: true, extras: '-v', disableHostKeyChecking: true, credentialsId: 'gonzafirma-ssh-server01', installation: 'ansible210', inventory: 'inventory.hosts', playbook: 'playbook-execute-command.yml'
             }
         }
-        stage('Manual Approval to Destroy the Infra') {
+        stage('Manual Approval to Uninstall Package') {
             steps{
-                input "Proceed with destroy the Infra?"
+                input "Proceed to Uninstall Package?"
             }
         }
-        stage('Executing Terraform Destroy') {
-            steps{
-                sh "terraform destroy --target docker_container.nginx -var=\"container_port=${CONTAINER_PORT}\" -var=\"reponame=${env.DOCKER_REPO}\" --auto-approve"
+        stage ("Ansible Connect to HOST and Uninstall Package") {
+            steps {
+                ansiblePlaybook become: true, colorized: true, extras: '-v', disableHostKeyChecking: true, credentialsId: 'gonzafirma-ssh-server01', installation: 'ansible210', inventory: 'inventory.hosts', playbook: 'playbook-uninstall-ubuntu-package.yml'
             }
         }
     }
-
-    
 }
