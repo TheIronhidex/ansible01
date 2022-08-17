@@ -16,11 +16,6 @@ pipeline {
                 genaralvars()
             }
         }
-        stage ("Get Code") {
-            steps {
-                git branch: "${env.GIT_BRANCH}", url: "${env.GIT_REPO}"
-            }
-        }
         stage ("Ansible Hello World") {
             steps {
                 ansiblePlaybook become: true, colorized: true, extras: '-v', disableHostKeyChecking: true, credentialsId: 'gonzafirma-ssh-server01', installation: 'ansible210', inventory: 'inventory.hosts', playbook: 'playbook-hello-world.yml'
